@@ -1,0 +1,170 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+using namespace std;
+
+// ================= Weather Record ADT =================
+class WeatherRecord {
+public:
+    string date;    // format: DD/MM/YYYY
+    string city;
+    double temperature;
+
+    WeatherRecord(string d = "", string c = "", double t = 0.0) {
+        date = d;
+        city = c;
+        temperature = t;
+    }
+};
+
+// ================= Data Storage Class =================
+class WeatherDataStorage {
+private:
+    vector<string> cities;
+    vector<int> years;
+    vector<vector<double>> temperatureData; // 2D array: years x cities
+    const double SENTINEL = -9999;          // for sparse data
+
+public:
+    // Constructor
+    WeatherDataStorage(vector<int> y, vector<string> c) {
+        years = y;
+        cities = c;
+        temperatureData.resize(years.size(), vector<double>(cities.size(), SENTINEL));
+    }
+
+    // Insert new record
+    void insert(WeatherRecord record) {
+        int year = stoi(record.date.substr(6, 4)); // extract YYYY
+        int row = getYearIndex(year);
+        int col = getCityIndex(record.city);
+
+        if (row != -1 && col != -1) {
+            temperatureData[row][col] = record.temperature;
+        } else {
+            cout << "Invalid city or year!\n";
+        }
+    }
+
+    // Delete record
+    void remove(string city, int year) {
+        int row = getYearIndex(year);
+        int col = getCityIndex(city);
+
+        if (row != -1 && col != -1) {
+            temperatureData[row][col] = SENTINEL; // mark as missing
+        }
+    }
+
+    // Retrieve city-wise data for a given year
+    void retrieve(string city, int year) {
+        int row = getYearIndex(year);
+        int col = getCityIndex(city);
+
+        if (row != -1 && col != -1) {
+            if (temperatureData[row][col] != SENTINEL)
+                cout << "Temperature in " << city << " (" << year << "): "
+                     << temperatureData[row][col] << "°C\n";
+            else
+                cout << "No data available.\n";
+        }
+    }
+
+    // Populate array with sample data
+    void populateArray() {
+        for (int i = 0; i < years.size(); i++) {
+            for (int j = 0; j < cities.size(); j++) {
+                temperatureData[i][j] = (i + j) * 2 + 20; // dummy values
+            }
+        }
+    }
+
+    // Row-major access
+    void rowMajorAccess() {
+        cout << "\nRow-Major Traversal:\n";
+        for (int i = 0; i < years.size(); i++) {
+            for (int j = 0; j < cities.size(); j++) {
+                cout << "[" << years[i] << "," << cities[j] << "]: "
+                     << temperatureData[i][j] << "\t";
+            }
+            cout << endl;
+        }
+    }
+
+    // Column-major access
+    void columnMajorAccess() {
+        cout << "\nColumn-Major Traversal:\n";
+        for (int j = 0; j < cities.size(); j++) {
+            for (int i = 0; i < years.size(); i++) {
+                cout << "[" << years[i] << "," << cities[j] << "]: "
+                     << temperatureData[i][j] << "\t";
+            }
+            cout << endl;
+        }
+    }
+
+    // Handle sparse data
+    void handleSparseData() {
+        cout << "\nSparse Data Representation:\n";
+        for (int i = 0; i < years.size(); i++) {
+            for (int j = 0; j < cities.size(); j++) {
+                if (temperatureData[i][j] != SENTINEL) {
+                    cout << "[" << years[i] << "," << cities[j] << "]: "
+                         << temperatureData[i][j] << "\n";
+                }
+            }
+        }
+    }
+
+    // Analyze complexity
+    void analyzeComplexity() {
+        cout << "\nTime Complexity:\n";
+        cout << "Insert: O(1)\nRetrieve: O(1)\nDelete: O(1)\n";
+        cout << "\nSpace Complexity:\n";
+        cout << "O(n*m) where n = years, m = cities\n";
+    }
+
+private:
+    // Helper functions
+    int getCityIndex(string city) {
+        for (int i = 0; i < cities.size(); i++) {
+            if (cities[i] == city) return i;
+        }
+        return -1;
+    }
+
+    int getYearIndex(int year) {
+        for (int i = 0; i < years.size(); i++) {
+            if (years[i] == year) return i;
+        }
+        return -1;
+    }
+};
+
+// ================= Main Function =================
+int main() {
+    vector<int> years = {2023, 2024, 2025};
+    vector<string> cities = {"Delhi", "Mumbai", "Chennai"};
+
+    WeatherDataStorage system(years, cities);
+
+    // Populate dummy data
+    system.populateArray();
+    system.rowMajorAccess();
+    system.columnMajorAccess();
+
+    // Insert and retrieve
+    WeatherRecord r1("01/01/2024", "Delhi", 28.5);
+    system.insert(r1);
+    system.retrieve("Delhi", 2024);
+
+    // Sparse data handling
+    system.remove("Mumbai", 2025);
+    system.handleSparseData();
+
+    // Complexity analysis
+    system.analyzeComplexity();
+
+    return 0;
+}
